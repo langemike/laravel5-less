@@ -1,0 +1,22 @@
+{
+    "name": "laravel/laravel5-less",
+    "description": "Bringing lessphp into Laravel",
+	"keywords": ["laravel","less"],
+	"license": "MIT",
+    "authors": [
+        {
+            "name": "Mike van Veenhuijzen",
+            "email": "mikevv@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.0",
+        "oyejorge/less.php": "~1.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Langemike\\Laravel5Less\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
