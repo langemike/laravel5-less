@@ -1,7 +1,7 @@
 <?php namespace Langemike\Laravel5Less;
 
 use lessc;
-use Storage;
+use File;
 use Illuminate\Contracts\Config\Repository as Config;
 
 class Less {
@@ -12,43 +12,73 @@ class Less {
 
 	public function __construct(Config $config) {
 		$this->config = $config;
-		$this->settings = $config->get('less', array());
 	}
 
+	/**
+	 * Compile CSS
+	 * @param string $file CSS filename without extension
+	 * @param array $options Compile options
+	 * @return array parsed files
+	 */
 	public function compile($file, $options = array()) {
 		//@todo add caching
-		$default = array(
-			'compress' => false,
-			'sourceMap' => false,
-			'cache_dir' => storage_path('framework/cache/less'),
-			// 'cache_method' => function() {}
-		);
-		$options = array_merge($defaults, $this->settings, $options);
-		$parser = new Less_Parser($options);
-		$parser->parseFile( 'app/cms/resources/less/cms.less', '/mysite/' );
+		$config = $this->prepareConfig($options);
+		$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
+		$output_file = $config['public_path'] . DIRECTORY_SEPARATOR . $file . '.css';
+		$parser = new \Less_Parser($config);
+		$parser->parseFile($input_file, asset('/'));
 		// Iterate through jobs
-		foreach($this->jobs as $job) {
+		foreach($this->jobs as $i => $job) {
 			call_user_func_array(array($parser, array_shift($job)), $job);
+			unset($this->jobs[$i]);
 		}
-		$this->jobs = array(); // Empty
-		$this->compiled = Storage::put('public/cms/css/test.css', $parser->getCss());
-		return $this;
+		File::put($output_file, $parser->getCss());
+		return $parser->allParsedFiles();
 	}
 
+	/**
+	 * Get configuration
+	 * @param array $options 
+	 * @return array Less configuration
+	 */
+	private function prepareConfig($options = array()) {
+		$defaults = array(
+			'compress' => false,
+			'sourceMap' => false,
+			'cache_dir' => storage_path('framework/cache/lessphp'),
+			'public_path' => public_path('css'),
+			'less_path' => base_path('resources/assets/less'),
+			// 'cache_method' => function() {}
+		);
+		return array_merge($defaults, $this->config->get('less', array()), $options);
+	}
+
+	/**
+	 * Append custom CSS/LESS to CSS output
+	 * @param string $less 
+	 * @return \Less
+	 */
 	public function parse($less) {
 		$this->jobs[] = array('parse', $less);
 		return $this;
 	}
 
+	/**
+	 * Set values of LESS variables
+	 * @param array $variables
+	 * @return \Less
+	 */
 	public function modifyVars($variables = array()) {
 		$this->jobs[] = array('ModifyVars', $variables);
 		return $this;
 	}
 
-	public function url($file = null) {
-		if($file === null) {
-			//$file = $this->file;
-		}
-		return '';
+	/**
+	 * Return output CSS url
+	 * @param  string $file
+	 * @return string 
+	 */
+	public function url($file) {
+		return asset($this->config->get('less.link_path', '/css') . '/' . $file . '.css');
 	}
 }

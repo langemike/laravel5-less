@@ -18,7 +18,7 @@ class LessServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->app['less'] = $this->app->share(function($app) {
-			return new Less($app['config'],$builder);
+			return new Less($app['config']);
 		});
         $this->publishes([
             __DIR__.'/config/config.php' => config_path('less.php'),
