@@ -2,13 +2,14 @@
 
 use lessc;
 use File;
+use Cache;
 use Illuminate\Contracts\Config\Repository as Config;
 
 class Less {
 
 	protected $config = array();
 	protected $jobs = array();
-	protected $compiled;
+	public static $cache_key = 'less_cache';
 
 	public function __construct(Config $config) {
 		$this->config = $config;
@@ -79,6 +80,28 @@ class Less {
 	 * @return string 
 	 */
 	public function url($file) {
+		switch(env('LESS_RECOMPILE')) {
+			case 'always' : // Always recompile
+				$this->compile($file);
+				break;
+			case 'change' :
+			case 'update' : // When modification is detected
+				$config = $this->prepareConfig();
+				$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
+				$cache_value = \Less_Cache::Get(array(
+					$input_file => asset('/')),
+					$config
+					//@todo Less_Cache variables parameter support
+				);
+				if (Cache::get(self::$cache_key) !== $cache_value) {
+					$this->compile($file);
+					Cache::put(self::$cache_key, $cache_value, 0);
+				}
+				break;
+			case 'none' :
+			default:
+				// Do nothing
+		}
 		return asset($this->config->get('less.link_path', '/css') . '/' . $file . '.css');
 	}
 }
