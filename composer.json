@@ -1,5 +1,5 @@
 {
-    "name": "laravel/laravel5-less",
+    "name": "langemike/laravel5-less",
     "description": "Bringing lessphp into Laravel",
 	"keywords": ["laravel","less"],
 	"license": "MIT",
