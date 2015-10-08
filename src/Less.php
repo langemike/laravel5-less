@@ -7,8 +7,13 @@ use Illuminate\Contracts\Config\Repository as Config;
 
 class Less {
 
+	const RECOMPILE_ALWAYS = 'always';
+	const RECOMPILE_CHANGE = 'change';
+	const RECOMPILE_NONE = 'none';
+
 	protected $config;
 	protected $jobs = array();
+	protected $modified_vars = array();
 	public static $cache_key = 'less_cache';
 
 	public function __construct(Config $config) {
@@ -19,7 +24,7 @@ class Less {
 	 * Compile CSS
 	 * @param string $file CSS filename without extension
 	 * @param array $options Compile options
-	 * @return array parsed files
+	 * @return bool true on succes, false on failure
 	 */
 	public function compile($file, $options = array()) {
 		$config = $this->prepareConfig($options);
@@ -32,8 +37,49 @@ class Less {
 			call_user_func_array(array($parser, array_shift($job)), $job);
 			unset($this->jobs[$i]);
 		}
-		File::put($output_file, $parser->getCss());
-		return $parser->allParsedFiles();
+		$this->modified_vars = array();
+		return File::put($output_file, $parser->getCss());
+	}
+
+	/**
+	 * Reompile CSS if needed
+	 * @param string $file CSS filename without extension
+	 * @param string $recompile CSS always (RECOMPILE_ALWAYS), when changed (RECOMPILE_CHANGE) or never (RECOMPILE_NONE)
+	 * @return bool true on recompiled, false when not
+	 */
+	public function recompile($file, $recompile = null) {
+		if (is_null($recompile)) {
+			$recompile = env('LESS_RECOMPILE');
+		}
+		switch($recompile) {
+			case self::RECOMPILE_ALWAYS :
+				return $this->compile($file);
+			case self::RECOMPILE_CHANGE :
+				$config = $this->prepareConfig();
+				$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
+				$cache_key = $this->getCacheKey($file);
+				$cache_value = \Less_Cache::Get(array($input_file => asset('/')), $config, $this->modified_vars);
+				if (Cache::get($cache_key) !== $cache_value) {
+					Cache::put($cache_key, $cache_value, 0);
+					return $this->compile($file);
+				}
+				return false;
+			case self::RECOMPILE_NONE :
+			case null:
+				return false;
+			default:
+				throw new \Exception('Unknown \'' . $recompile . '\' LESS_RECOMPILE setting');
+		}
+		return false;
+	}
+
+	/**
+	 * Get filename-based cache key
+	 * @param string $file
+	 * @return  string Cache key
+	 */
+	protected function getCacheKey($file) {
+		return self::$cache_key . '_' . $file;
 	}
 
 	/**
@@ -41,7 +87,7 @@ class Less {
 	 * @param array $options 
 	 * @return array Less configuration
 	 */
-	private function prepareConfig($options = array()) {
+	protected function prepareConfig($options = array()) {
 		$defaults = array(
 			'compress' => false,
 			'sourceMap' => false,
@@ -70,6 +116,7 @@ class Less {
 	 */
 	public function modifyVars($variables = array()) {
 		$this->jobs[] = array('ModifyVars', $variables);
+		$this->modified_vars = array_merge($this->modified_vars, $variables);
 		return $this;
 	}
 
@@ -79,24 +126,7 @@ class Less {
 	 * @return string 
 	 */
 	public function url($file) {
-		switch(env('LESS_RECOMPILE')) {
-			case 'always' : // Always recompile
-				$this->compile($file);
-				break;
-			case 'change' :
-			case 'update' : // When modification is detected
-				$config = $this->prepareConfig();
-				$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
-				$cache_value = \Less_Cache::Get(array($input_file => asset('/')), $config); //@todo Less_Cache variables parameter support
-				if (Cache::get(self::$cache_key) !== $cache_value) {
-					$this->compile($file);
-					Cache::put(self::$cache_key, $cache_value, 0);
-				}
-				break;
-			case 'none' :
-			default:
-				// Do nothing
-		}
+		$recompiled = $this->recompile($file);
 		$path = $this->config->get('less.link_path', '/css');
 		return asset($path . '/' . $file . '.css');
 	}
