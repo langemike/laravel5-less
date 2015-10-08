@@ -7,7 +7,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 
 class Less {
 
-	protected $config = array();
+	protected $config;
 	protected $jobs = array();
 	public static $cache_key = 'less_cache';
 
@@ -22,7 +22,6 @@ class Less {
 	 * @return array parsed files
 	 */
 	public function compile($file, $options = array()) {
-		//@todo add caching
 		$config = $this->prepareConfig($options);
 		$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
 		$output_file = $config['public_path'] . DIRECTORY_SEPARATOR . $file . '.css';
@@ -75,7 +74,7 @@ class Less {
 	}
 
 	/**
-	 * Return output CSS url
+	 * Return output CSS url. Recompile CSS as configured  
 	 * @param  string $file
 	 * @return string 
 	 */
@@ -88,11 +87,7 @@ class Less {
 			case 'update' : // When modification is detected
 				$config = $this->prepareConfig();
 				$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
-				$cache_value = \Less_Cache::Get(array(
-					$input_file => asset('/')),
-					$config
-					//@todo Less_Cache variables parameter support
-				);
+				$cache_value = \Less_Cache::Get(array($input_file => asset('/')), $config); //@todo Less_Cache variables parameter support
 				if (Cache::get(self::$cache_key) !== $cache_value) {
 					$this->compile($file);
 					Cache::put(self::$cache_key, $cache_value, 0);
@@ -102,6 +97,7 @@ class Less {
 			default:
 				// Do nothing
 		}
-		return asset($this->config->get('less.link_path', '/css') . '/' . $file . '.css');
+		$path = $this->config->get('less.link_path', '/css');
+		return asset($path . '/' . $file . '.css');
 	}
 }
