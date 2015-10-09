@@ -14,6 +14,7 @@ class Less {
 	protected $config;
 	protected $jobs = array();
 	protected $modified_vars = array();
+	protected $parsed_less = '';
 	public static $cache_key = 'less_cache';
 
 	public function __construct(Config $config) {
@@ -37,29 +38,41 @@ class Less {
 			call_user_func_array(array($parser, array_shift($job)), $job);
 			unset($this->jobs[$i]);
 		}
-		$this->modified_vars = array();
-		return File::put($output_file, $parser->getCss());
+		return $this->writeCss($output_file, $parser->getCss());
 	}
 
 	/**
-	 * Reompile CSS if needed
+	 * Write CSS file to disk
+	 * @param  string $output_file CSS filepath
+	 * @param  string $css CSS
+	 * @return bool true on succes, false on failure
+	 */
+	protected function writeCss($output_file, $css) {
+		$this->modified_vars = array();
+		$this->parsed_less = '';
+		return File::put($output_file, $css);
+	}
+
+	/**
+	 * Recompile CSS if needed
 	 * @param string $file CSS filename without extension
 	 * @param string $recompile CSS always (RECOMPILE_ALWAYS), when changed (RECOMPILE_CHANGE) or never (RECOMPILE_NONE)
+	 * @param array $options Extra compile options
 	 * @return bool true on recompiled, false when not
 	 */
-	public function recompile($file, $recompile = null) {
+	public function recompile($file, $recompile = null, $options = array()) {
 		if (is_null($recompile)) {
 			$recompile = env('LESS_RECOMPILE');
 		}
 		switch($recompile) {
 			case self::RECOMPILE_ALWAYS :
-				return $this->compile($file);
+				return $this->compile($file, $options);
 			case self::RECOMPILE_CHANGE :
-				$config = $this->prepareConfig();
+				$config = $this->prepareConfig($options);
 				$input_file = $config['less_path'] . DIRECTORY_SEPARATOR . $file . '.less';
 				$cache_key = $this->getCacheKey($file);
 				$cache_value = \Less_Cache::Get(array($input_file => asset('/')), $config, $this->modified_vars);
-				if (Cache::get($cache_key) !== $cache_value) {
+				if (Cache::get($cache_key) !== $cache_value || !empty($this->parsed_less)) {
 					Cache::put($cache_key, $cache_value, 0);
 					return $this->compile($file);
 				}
@@ -106,6 +119,7 @@ class Less {
 	 */
 	public function parse($less) {
 		$this->jobs[] = array('parse', $less);
+		$this->parsed_less .= $less . PHP_EOL;
 		return $this;
 	}
 
