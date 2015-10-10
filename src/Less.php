@@ -82,7 +82,7 @@ class Less {
 				$cache_value = \Less_Cache::Get(array($input_path => asset('/')), $config, $this->modified_vars);
 				if (Cache::get($cache_key) !== $cache_value || !empty($this->parsed_less)) {
 					Cache::put($cache_key, $cache_value, 0);
-					return $this->compile($filename);
+					return $this->compile($filename, $options);
 				}
 				return false;
 			case self::RECOMPILE_NONE :
