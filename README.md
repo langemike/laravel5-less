@@ -40,13 +40,13 @@ with Artisan:
 ````
 $ php artisan vendor:publish
 ````
-This will create a confif file 'less.php' in your config directory.
+This will create a config file 'less.php' in your config directory.
 
 ### Settings
 
-You can specify your configuration through 3 options: .env, config.php file and through $options parameter.
+You can specify your configuration through 3 options: `.env`, `config.php` file and through `$options` parameter.
 
-Your .env configuration will be used by default, it will be overridden by it's config.php settings, but the $options paramter will have the highest preference.
+Your .env configuration will be used by default, it will be overridden by it's config.php settings, but the $options parameter will have the highest preference.
 
 ### Recompilation
 Additionally you can (and probably should) have different configurations for development 
@@ -72,13 +72,13 @@ public function recompileCSS()
 }
 ```
 
-Within your view you can use the `Less::link()` function to link to your generated CSS
+Within your view you can use the `Less::url()` function to link to your generated CSS
 
 ```html
 	<link href="{!! Less::url('filename') !!}" rel="stylesheet" />
 ```
 
-Passing `true` as the second parameter to `Less::link()` will auto-detect, based on your configuration, if recompilation is needed and will do so accordingly. 
+Passing `true` as the second parameter to `Less::url()` will auto-detect, based on your configuration, if recompilation is needed and will do so accordingly. 
 
 ## Credits
 This project is inspired by [Less4Laravel](https://github.com/jtgrimes/less4laravel).
