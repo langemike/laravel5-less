@@ -44,7 +44,7 @@ class Less {
 	 * Reset current jobs for initiating a new Less instance
 	 * @return \Less
 	 */ 
-	protected function fresh() {
+	public function fresh() {
 		$this->jobs = array();
 		$this->modified_vars = array();
 		$this->parsed_less = '';
