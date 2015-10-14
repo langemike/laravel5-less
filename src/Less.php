@@ -14,6 +14,7 @@ class Less {
 	protected $jobs;
 	protected $modified_vars;
 	protected $parsed_less;
+	protected $recompiled;
 	public static $cache_key = 'less_cache';
 
 	public function __construct(Config $config) {
@@ -48,6 +49,7 @@ class Less {
 		$this->jobs = array();
 		$this->modified_vars = array();
 		$this->parsed_less = '';
+		$this->recompiled = false;
 		return $this;
 	}
 
@@ -69,12 +71,17 @@ class Less {
 	 * @return bool true on recompiled, false when not
 	 */
 	public function recompile($filename, $recompile = null, $options = array()) {
+		if ($this->recompiled === true) {
+			return false; // This instance is already recompiled. Recompile a new or the same instance using Less::fresh()
+		}
 		if (is_null($recompile)) {
 			$recompile = env('LESS_RECOMPILE');
 		}
+		$this->recompiled = false; // Default value
 		switch($recompile) {
 			case self::RECOMPILE_ALWAYS :
-				return $this->compile($filename, $options);
+				$this->recompiled = $this->compile($filename, $options);
+				break;
 			case self::RECOMPILE_CHANGE :
 				$config = $this->prepareConfig($options);
 				$input_path = $config['less_path'] . DIRECTORY_SEPARATOR . $filename . '.less';
@@ -82,16 +89,17 @@ class Less {
 				$cache_value = \Less_Cache::Get(array($input_path => asset('/')), $config, $this->modified_vars);
 				if (Cache::get($cache_key) !== $cache_value || !empty($this->parsed_less)) {
 					Cache::put($cache_key, $cache_value, 0);
-					return $this->compile($filename, $options);
+					$this->recompiled = $this->compile($filename, $options);
 				}
-				return false;
+				break;
 			case self::RECOMPILE_NONE :
 			case null:
-				return false;
+				// Do nothing obviously
+				break;
 			default:
 				throw new \Exception('Unknown \'' . $recompile . '\' LESS_RECOMPILE setting');
 		}
-		return false;
+		return $this->recompiled;
 	}
 
 	/**
