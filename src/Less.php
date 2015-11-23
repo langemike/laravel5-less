@@ -39,7 +39,12 @@ class Less {
 		foreach($this->jobs as $i => $job) {
 			call_user_func_array(array($parser, array_shift($job)), $job);
 		}
-		return $this->writeCss($output_path, $parser->getCss());
+		$written = $this->writeCss($output_path, $parser->getCss());
+		// Remove old cache files if succesfully written
+		if ($written === true) {
+			$this->cleanCache();
+		}
+		return $written;
 	}
 
 	/**
@@ -62,6 +67,14 @@ class Less {
 	 */
 	protected function writeCss($output_path, $css) {
 	 	return file_put_contents($output_path, $css) !== false;
+	}
+
+	/**
+	 * Clean cache
+	 */
+	protected function cleanCache() {
+		\Less_Cache::$gc_lifetime = 2; // Inchangeable?
+		\Less_Cache::CleanCache(); 
 	}
 
 	/**
@@ -99,11 +112,6 @@ class Less {
 				break;
 			default:
 				throw new \Exception('Unknown \'' . $recompile . '\' LESS_RECOMPILE setting');
-		}
-		if ($this->recompiled === true) {
-			// Remove old cache files
-			\Less_Cache::$gc_lifetime = 0;
-			\Less_Cache::CleanCache();
 		}
 		return $this->recompiled;
 	}
