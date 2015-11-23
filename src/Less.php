@@ -1,8 +1,8 @@
 <?php namespace Langemike\Laravel5Less;
 
 use lessc;
-use Cache;
 use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Cache\Repository as Cache;
 
 class Less {
 
@@ -17,8 +17,9 @@ class Less {
 	protected $recompiled;
 	public static $cache_key = 'less_cache';
 
-	public function __construct(Config $config) {
+	public function __construct(Config $config, Cache $cache) {
 		$this->config = $config;
+		$this->cache = $cache;
 		$this->fresh();
 	}
 
@@ -87,8 +88,8 @@ class Less {
 				$input_path = $config['less_path'] . DIRECTORY_SEPARATOR . $filename . '.less';
 				$cache_key = $this->getCacheKey($filename);
 				$cache_value = \Less_Cache::Get(array($input_path => asset('/')), $config, $this->modified_vars);
-				if (Cache::get($cache_key) !== $cache_value || !empty($this->parsed_less)) {
-					Cache::put($cache_key, $cache_value, 0);
+				if ($this->cache->get($cache_key) !== $cache_value || !empty($this->parsed_less)) {
+					$this->cache->put($cache_key, $cache_value, 0);
 					$this->recompiled = $this->compile($filename, $options);
 				}
 				break;
