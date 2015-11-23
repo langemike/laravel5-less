@@ -100,6 +100,11 @@ class Less {
 			default:
 				throw new \Exception('Unknown \'' . $recompile . '\' LESS_RECOMPILE setting');
 		}
+		if ($this->recompiled === true) {
+			// Remove old cache files
+			\Less_Cache::$gc_lifetime = 0;
+			\Less_Cache::CleanCache();
+		}
 		return $this->recompiled;
 	}
 
