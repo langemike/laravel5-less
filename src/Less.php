@@ -33,8 +33,9 @@ class Less {
 		$config = $this->prepareConfig($options);
 		$input_path = $config['less_path'] . DIRECTORY_SEPARATOR . $filename . '.less';
 		$output_path = $config['public_path'] . DIRECTORY_SEPARATOR . $filename . '.css';
+		$css_dir_depth = $this->getDirDepth(public_path(), $output_path);
 		$parser = new \Less_Parser($config);
-		$parser->parseFile($input_path, asset('/'));
+		$parser->parseFile($input_path, str_repeat('{relative_path_fix}/', $css_dir_depth));
 		// Iterate through jobs
 		foreach($this->jobs as $i => $job) {
 			call_user_func_array(array($parser, array_shift($job)), $job);
@@ -66,21 +67,34 @@ class Less {
 	 * @return bool true on succes, false on failure
 	 */
 	protected function writeCss($output_path, $css) {
+		$css = str_replace('{relative_path_fix}', '..', $css);
 	 	return file_put_contents($output_path, $css) !== false;
+	}
+
+	/**
+	 * Get directory depth relative to each other
+	 * @param  string $start_dir Directory path
+	 * @param  string $end_dir Directory path
+	 * @return int depth
+	 */
+	protected function getDirDepth($start_dir, $end_dir) {
+		$start_dir_paths = explode(DIRECTORY_SEPARATOR, str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $start_dir));
+		$end_dir_paths = explode(DIRECTORY_SEPARATOR, str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $end_dir));
+		return count($end_dir_paths) - count($start_dir_paths);
 	}
 
 	/**
 	 * Clean cache
 	 */
 	protected function cleanCache() {
-		\Less_Cache::$gc_lifetime = 2; // Inchangeable?
+		\Less_Cache::$gc_lifetime = 2; // Unchangeable?
 		\Less_Cache::CleanCache(); 
 	}
 
 	/**
 	 * Recompile CSS if needed
 	 * @param string $filename CSS filename without extension
-	 * @param string $recompile CSS always (RECOMPILE_ALWAYS), when changed (RECOMPILE_CHANGE) or never (RECOMPILE_NONE)
+	 * @param string $recompile Availible options: always (RECOMPILE_ALWAYS), when changed (RECOMPILE_CHANGE) or never (RECOMPILE_NONE)
 	 * @param array $options Extra compile options
 	 * @return bool true on recompiled, false when not
 	 */
