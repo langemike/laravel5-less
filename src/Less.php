@@ -114,8 +114,13 @@ class Less {
 				$config = $this->prepareConfig($options);
 				$input_path = $config['less_path'] . DIRECTORY_SEPARATOR . $filename . '.less';
 				$cache_key = $this->getCacheKey($filename);
-				$cache_value = \Less_Cache::Get(array($input_path => asset('/')), $config, $this->modified_vars);
-				if ($this->cache->get($cache_key) !== $cache_value || !empty($this->parsed_less)) {
+				try {
+					$cache_value = \Less_Cache::Get(array($input_path => asset('/')), $config, $this->modified_vars);
+				} catch(\Exception $e) {
+					$cache_value = null;
+					$this->cleanCache();
+				}
+				if ($this->cache->get($cache_key, '') !== $cache_value || !empty($this->parsed_less)) {
 					$this->cache->put($cache_key, $cache_value, 0);
 					$this->recompiled = $this->compile($filename, $options);
 				}
