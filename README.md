@@ -29,7 +29,7 @@ Laravel >= 5.1
 ];
 
 'aliases' => [
-    'Less' => langemike\Laravel5Less\LessFacade::class
+    'Less' => Langemike\Laravel5Less\LessFacade::class
 ];
 
 ```
@@ -87,14 +87,15 @@ LESS_MINIFY=true
 
 ## Usage
 
+By default, create your .less files into resources/assets/less
+
 Within your models or controllers, you can perform modification to the outputted CSS. Here are some examples:
 before you perform a redirect...
 
 ```php
 public function recompileCSS()
 {
-    Less::modifyVars(['@body-bg' => 'pink'])->recompile('filename');
-
+    Less::modifyVars(['@body-bg' => 'pink'])->recompile('filename_wo_ext');
     return Redirect::back();
 }
 ```
@@ -102,10 +103,10 @@ public function recompileCSS()
 Within your view you can use the `Less::url()` function to link to your generated CSS
 
 ```html
-	<link href="{!! Less::url('filename') !!}" rel="stylesheet" />
+	<link href="{!! Less::url('filename_wo_ext') !!}" rel="stylesheet" />
 ```
 
-Passing `true` as the second parameter to `Less::url()` will auto-detect, based on your configuration, if recompilation is needed and will do so accordingly.
+If necessary, passing `false` as second parameter to `Less::url()` will avoid recompilation.
 
 ## Credits
 This project is inspired by [Less4Laravel](https://github.com/jtgrimes/less4laravel).
