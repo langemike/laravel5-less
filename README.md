@@ -1,5 +1,7 @@
-# LESS support for Laravel 5.x without Node.js
-Use LESS with your Laravel installation. Uses [oyejorge/less.php](http://lessphp.gpeasy.com/) instead of [leafo/lessphp](http://leafo.net/lessphp/) which is a more actively developed port of the official LESS processor. 
+# LESS support with minifying for Laravel 5.x without Node.js
+Use LESS with your Laravel installation. Uses [oyejorge/less.php](http://lessphp.gpeasy.com/) instead of [leafo/lessphp](http://leafo.net/lessphp/) which is a more actively developed port of the official LESS processor.
+
+Uses [matthiasmullie/minify](https://github.com/matthiasmullie/minify) for minifying.
 
 ## Features
 - Can modify LESS variables on-the-fly
@@ -17,20 +19,32 @@ First, pull in the package through Composer.
 }
 ```
 
-And then, if using Laravel 5, include the service provider within `config/app.php`.
+And then, include the service provider within `config/app.php`.
+
+Laravel >= 5.1
+
+```php
+'providers' => [
+    Langemike\Laravel5Less\LessServiceProvider::class
+];
+
+'aliases' => [
+    'Less' => langemike\Laravel5Less\LessFacade::class
+];
+
+```
+
+Laravel 5.0 :
 
 ```php
 'providers' => [
     'Langemike\Laravel5Less\LessServiceProvider'
 ];
-```
 
-In the aliases section, add:
-
-```php
 'aliases' => [
     'Less' => 'Langemike\Laravel5Less\LessFacade'
 ];
+
 ```
 
 ## Configuration
@@ -49,14 +63,27 @@ You can specify your configuration through 3 options: `.env`, `config.php` file 
 Your .env configuration will be used by default, it will be overridden by it's config.php settings, but the $options parameter will have the highest preference.
 
 ### Recompilation
-Additionally you can (and probably should) have different configurations for development 
+Additionally you can (and probably should) have different configurations for development
 and production.  Specifically, you probably don't want to be generating css files on
 your production server, since it will slow down your site.
 
 - change -- Check if LESS file(s) are modified. If it does, recompile CSS
-- never -- Don't check, don't recompile.
+- never -- Don't check, don't recompile (best choice on a production server).
 - always -- Always rewrite CSS
 
+Set LESS_RECOMPILE in .env
+
+````
+LESS_RECOMPILE=change
+````
+
+## Minify
+
+By default, the generated css is not minified. To minify it, just set LESS_MINIFY to true in .env
+
+````
+LESS_MINIFY=true
+````
 
 ## Usage
 
@@ -78,7 +105,7 @@ Within your view you can use the `Less::url()` function to link to your generate
 	<link href="{!! Less::url('filename') !!}" rel="stylesheet" />
 ```
 
-Passing `true` as the second parameter to `Less::url()` will auto-detect, based on your configuration, if recompilation is needed and will do so accordingly. 
+Passing `true` as the second parameter to `Less::url()` will auto-detect, based on your configuration, if recompilation is needed and will do so accordingly.
 
 ## Credits
 This project is inspired by [Less4Laravel](https://github.com/jtgrimes/less4laravel).
