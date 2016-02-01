@@ -3,6 +3,7 @@
 use lessc;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use MatthiasMullie\Minify;
 
 class Less {
 
@@ -45,6 +46,11 @@ class Less {
 		if ($written === true) {
 			$this->cleanCache();
 		}
+        // Minifying CSS
+        if(env('LESS_MINIFY', false)) {
+            $minifier = new Minify\CSS($output_path);
+            $minifier->minify($output_path);
+        }
 		return $written;
 	}
 
@@ -68,6 +74,9 @@ class Less {
 	 */
 	protected function writeCss($output_path, $css) {
 		$css = str_replace('{relative_path_fix}', '..', $css);
+        if(!is_dir(dirname($output_path))) {
+            mkdir(dirname($output_path), 0777, true);
+        }
 	 	return file_put_contents($output_path, $css) !== false;
 	}
 
@@ -99,6 +108,7 @@ class Less {
 	 * @return bool true on recompiled, false when not
 	 */
 	public function recompile($filename, $recompile = null, $options = array()) {
+
 		if ($this->recompiled === true) {
 			return false; // This instance is already recompiled. Recompile a new or the same instance using Less::fresh()
 		}
@@ -208,9 +218,9 @@ class Less {
 	 * @param  bool $auto_recompile Automaticly recompile
 	 * @return string CSS url
 	 */
-	public function url($filename, $auto_recompile = false) {
+	public function url($filename, $auto_recompile = true) {
 		if ($auto_recompile) {
-			$recompiled = $this->recompile($filename);
+			$this->recompile($filename);
 		}
 		$css_path = $this->config->get('less.link_path', '/css') . '/' . $filename . '.css';
 		return asset($css_path);
