@@ -1,13 +1,14 @@
-# LESS support with minifying for Laravel 5.x without Node.js
+# LESS support (with minifying) for Laravel 5.x without Node.js
 Use LESS with your Laravel installation. Uses [oyejorge/less.php](http://lessphp.gpeasy.com/) instead of [leafo/lessphp](http://leafo.net/lessphp/) which is a more actively developed port of the official LESS processor.
 
-Uses [matthiasmullie/minify](https://github.com/matthiasmullie/minify) for minifying.
+Use [matthiasmullie/minify](https://github.com/matthiasmullie/minify) for minifying.
 
 ## Features
 - Can modify LESS variables on-the-fly
 - Can parse custom CSS/LESS and append it to the resulting file
 - Works with Twitter Bootstrap v3.3.5 (thanks to oyejorge/less.php)
 - Caching support
+- Minifying support
 
 ## Installation
 
@@ -54,24 +55,25 @@ with Artisan:
 ````
 $ php artisan vendor:publish
 ````
-This will create a config file 'less.php' in your config directory.
+This will create a config file `less.php` in your config directory.
 
 ### Settings
 
-You can specify your configuration through 3 options: `.env`, `config.php` file and through `$options` parameter.
+You can specify your configuration through 3 options: `.env`, `config/less.php` file or through `$options` argument.
 
-Your .env configuration will be used by default, it will be overridden by it's config.php settings, but the $options parameter will have the highest preference.
+Your `.env` configuration will be used by default, it will be overridden by the settings in `config/less.php`, but the `$options` argument will have the highest preference.
 
 ### Recompilation
+
 Additionally you can (and probably should) have different configurations for development
 and production.  Specifically, you probably don't want to be generating css files on
 your production server, since it will slow down your site.
 
-- change -- Check if LESS file(s) are modified. If it does, recompile CSS
-- never -- Don't check, don't recompile (best choice on a production server).
-- always -- Always rewrite CSS
+- `change` -- Check if LESS file(s) are modified. If it does, recompile CSS
+- `never` -- Don't check, don't recompile (best choice on a production server).
+- `always` -- Always rewrite CSS
 
-Set LESS_RECOMPILE in .env
+Set `LESS_RECOMPILE` in `.env`
 
 ````
 LESS_RECOMPILE=change
@@ -79,7 +81,7 @@ LESS_RECOMPILE=change
 
 ## Minify
 
-By default, the generated css is not minified. To minify it, just set LESS_MINIFY to true in .env
+By default, the generated css is not minified. To minify it, just set `LESS_MINIFY` to `true` in `.env`
 
 ````
 LESS_MINIFY=true
@@ -87,7 +89,7 @@ LESS_MINIFY=true
 
 ## Usage
 
-By default, create your .less files into resources/assets/less
+By default, you must create your `.less` files into `resources/assets/less`
 
 Within your models or controllers, you can perform modification to the outputted CSS. Here are some examples:
 before you perform a redirect...
@@ -106,8 +108,10 @@ Within your view you can use the `Less::url()` function to link to your generate
 	<link href="{!! Less::url('filename_wo_ext') !!}" rel="stylesheet" />
 ```
 
-If necessary, passing `false` as second parameter to `Less::url()` will avoid recompilation.
+If necessary, passing `false` as second parameter to `Less::url()` will avoid all recompilation (already if you set `LESS_RECOMPILE` to `always`).
 
 ## Credits
 This project is inspired by [Less4Laravel](https://github.com/jtgrimes/less4laravel).
 Without the hard work of [oyejorge/less.php](http://lessphp.gpeasy.com/) this project wouldn't be possible.
+
+Minification added by [Sebastien HEYD](http://sheyd.fr)
