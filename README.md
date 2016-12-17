@@ -54,7 +54,7 @@ and production.  Specifically, you probably don't want to be generating css file
 your production server, since it will slow down your site.
 
 - change -- Check if LESS file(s) are modified. If it does, recompile CSS
-- never -- Don't check, don't recompile.
+- none -- Don't check, don't recompile.
 - always -- Always rewrite CSS
 
 
