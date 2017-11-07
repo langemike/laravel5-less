@@ -17,7 +17,7 @@ class LessServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		$this->app['less'] = $this->app->share(function($app) {
+		$this->app->singleton('less', function($app) {
 			return new Less($app['config'], $app['cache.store']);
 		});
         $this->publishes([
@@ -43,5 +43,5 @@ class LessServiceProvider extends ServiceProvider {
 	{
 		return array('less');
 	}
-	
+
 }

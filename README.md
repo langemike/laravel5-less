@@ -17,7 +17,9 @@ First, pull in the package through Composer.
 }
 ```
 
-And then, if using Laravel 5, include the service provider within `config/app.php`.
+Note: The following installation instructions are longer required with Laravel 5.5.
+
+If using Laravel 5 up to 5.4, include the service provider within `config/app.php`.
 
 ```php
 'providers' => [

@@ -18,5 +18,15 @@
             "Langemike\\Laravel5Less\\": "src/"
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Langemike\\Laravel5Less\\LessServiceProvider"
+            ],
+            "aliases": {
+                "Less": "Langemike\\Laravel5Less\\LessFacade"
+            }
+        }
+    }
 }
