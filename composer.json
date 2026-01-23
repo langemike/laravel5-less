@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=5.5.0",
-        "oyejorge/less.php": "~1.5"
+        "wikimedia/less.php": "^1.8.1"
     },
     "autoload": {
         "psr-4": {
